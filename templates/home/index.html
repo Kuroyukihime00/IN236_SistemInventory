@@ -1,0 +1,33 @@
+{% extends "base/base.html" %} {% block content %}
+<header class="container mt-5 text-center">
+	<h1>Selamat Datang di Sistem Inventory</h1>
+	<p class="text-muted">
+		Sistem ini membantu Anda mengelola data barang dan tipe barang dengan mudah.
+	</p>
+</header>
+<div class="container text-center mt-4">
+	<a href="/barang" class="btn btn-primary me-3">
+		<i class="fas fa-box"></i> Kelola Barang
+	</a>
+	<a href="/tipebarang" class="btn btn-secondary">
+		<i class="fas fa-tags"></i> Kelola Tipe Barang
+	</a>
+</div>
+<div class="container mt-4">
+	<div class="row text-center">
+		<div class="col-md-6">
+			<h3>Total Barang</h3>
+			<p>{{ total_barang }} barang</p>
+		</div>
+		<div class="col-md-6">
+			<h3>Total Tipe Barang</h3>
+			<p>{{ total_tipe_barang }} tipe</p>
+		</div>
+	</div>
+</div>
+<footer class="container mt-5 text-center">
+	<p class="text-muted">
+		&copy; 2025 Sistem Inventory - Dikembangkan oleh Tim Shantaro & Abhivandya
+	</p>
+</footer>
+{% endblock %}

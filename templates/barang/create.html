@@ -1,0 +1,95 @@
+{% extends "base/base.html" %} {% block content %}
+<header class="container mt-4">
+	<h1>Tambah Barang</h1>
+</header>
+<main class="container mt-4">
+	{% with messages = get_flashed_messages(with_categories=true) %} {% if
+	messages %}
+	<div class="alert alert-danger">
+		<ul>
+			{% for category, message in messages %} {% if category == 'danger' %}
+			<li>{{ message }}</li>
+			{% endif %} {% endfor %}
+		</ul>
+	</div>
+	{% endif %} {% endwith %} {% if errors %}
+	<div class="alert alert-danger">
+		<ul>
+			{% for error in errors %}
+			<li>{{ error }}</li>
+			{% endfor %}
+		</ul>
+	</div>
+	{% endif %}
+	<form id="add-barang-form" method="post" action="/barang/create">
+		<!-- Nama Barang -->
+		<div class="form-group">
+			<label for="nama_barang">Nama Barang:</label>
+			<input
+				type="text"
+				id="nama_barang"
+				name="nama_barang"
+				class="form-control"
+				placeholder="Masukkan Nama Barang"
+				value="{{ nama_barang }}"
+				required
+			/>
+		</div>
+
+		<!-- Jumlah -->
+		<div class="form-group">
+			<label for="jumlah">Jumlah:</label>
+			<input
+				type="number"
+				id="jumlah"
+				name="jumlah"
+				class="form-control"
+				placeholder="Masukkan Jumlah"
+				value="{{ jumlah }}"
+				required
+				min="1"
+			/>
+		</div>
+
+		<!-- ID Tipe Barang -->
+		<div class="form-group">
+			<label for="tipe_id">ID Tipe Barang:</label>
+			<input
+				type="number"
+				id="tipe_id"
+				name="tipe_id"
+				class="form-control"
+				placeholder="Masukkan ID Tipe Barang"
+				value="{{ tipe_id }}"
+				required
+			/>
+		</div>
+
+		<!-- Submit Button -->
+		<button type="submit" class="btn btn-primary">Tambah Barang</button>
+		<a href="/barang" class="btn btn-secondary ml-2">Cancel</a>
+	</form>
+</main>
+
+<script>
+	// Validasi client-side
+	function validateForm() {
+		const idBarang = document.getElementById("id_barang").value;
+		const namaBarang = document.getElementById("nama_barang").value;
+		const jumlah = document.getElementById("jumlah").value;
+		const tipeId = document.getElementById("tipe_id").value;
+
+		if (!idBarang || !namaBarang || !jumlah || !tipeId) {
+			alert("Semua kolom harus diisi!");
+			return false;
+		}
+
+		if (jumlah <= 0) {
+			alert("Jumlah harus lebih dari 0!");
+			return false;
+		}
+
+		return true;
+	}
+</script>
+{% endblock %}

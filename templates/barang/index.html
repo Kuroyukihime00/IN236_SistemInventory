@@ -1,0 +1,168 @@
+{% extends "base/base.html" %} {% block content %}
+<header class="container">
+	<h1>Daftar Barang</h1>
+	<div class="d-flex mb-3">
+		<a
+			href="{{ url_for('create_view_barang') }}"
+			class="btn btn-primary me-2"
+			title="Create a new item"
+		>
+			<i class="fas fa-plus"></i> Create New Item</a
+		>
+		<a
+			href="{{ url_for('export_barang') }}"
+			class="btn btn-success me-2"
+			title="Export all items"
+		>
+			<i class="fas fa-download"></i> Export Data</a
+		>
+		<button
+			class="btn btn-danger"
+			id="bulk-delete"
+			title="Delete selected items"
+		>
+			<i class="fas fa-trash"></i> Bulk Delete
+		</button>
+	</div>
+</header>
+<main>
+	<form method="get" action="/barang" class="mb-3">
+		<input
+			type="text"
+			name="search"
+			value="{{ request.args.get('search', '') }}"
+			placeholder="Search by Name or ID"
+			class="form-control mb-2"
+			style="max-width: 300px;"
+		/>
+		<select name="tipe_id" class="form-control mb-2" style="max-width: 300px;">
+			<option value="">-- Filter by Tipe --</option>
+			{% for tipe in tipe_list %}
+			<option value="{{ tipe.id }}" {% if request.args.get('tipe_id')|int == tipe.id %}selected{% endif %}>
+				{{ tipe.nama_tipe }}
+			</option>
+			{% endfor %}
+		</select>
+		<button type="submit" class="btn btn-primary">Apply Filter</button>
+	</form>	
+	<table class="table table-hover mb-0 text-center data">
+		<thead class="table-dark">
+			<tr>
+				<th><input type="checkbox" id="select-all" /></th>
+				<th>ID Barang</th>
+				<th>Nama Barang</th>
+				<th>Jumlah Barang</th>
+				<th>ID Tipe Barang</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% if barang_list %} {% for barang in barang_list %}
+			<tr>
+				<td>
+					<input type="checkbox" class="select-item" value="{{ barang.id }}" />
+				</td>
+				<td>{{ barang.id_barang }}</td>
+				<td>{{ barang.nama_barang }}</td>
+				<td>{{ barang.jumlah }}</td>
+				<td>{{ barang.tipe_id }}</td>
+				<td>
+					<a
+						href="{{ url_for('update_barang', id=barang.id) }}"
+						class="btn btn-warning me-1"
+						title="Edit this item"
+					>
+						<i class="fas fa-edit"></i> Update</a
+					>
+					<a
+						href="{{ url_for('delete_barang', id=barang.id) }}"
+						class="btn btn-danger"
+						title="Remove this item"
+					>
+						<i class="fas fa-trash"></i> Delete</a
+					>
+				</td>
+			</tr>
+			{% endfor %} {% else %}
+			<tr>
+				<td colspan="6">No data available</td>
+			</tr>
+			{% endif %}
+		</tbody>
+	</table>
+	<nav aria-label="Page navigation">
+		<ul class="pagination justify-content-center">
+			{% if barang_list.has_prev %}
+			<li class="page-item">
+				<a class="page-link" href="?page={{ barang_list.prev_num }}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}{% if request.args.get('tipe_id') %}&tipe_id={{ request.args.get('tipe_id') }}{% endif %}">
+					&laquo; Previous
+				</a>
+			</li>
+			{% endif %}
+			
+			{% for page_num in barang_list.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+			{% if page_num %}
+			<li class="page-item {% if page_num == barang_list.page %}active{% endif %}">
+				<a class="page-link" href="?page={{ page_num }}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}{% if request.args.get('tipe_id') %}&tipe_id={{ request.args.get('tipe_id') }}{% endif %}">
+					{{ page_num }}
+				</a>
+			</li>
+			{% else %}
+			<li class="page-item disabled"><span class="page-link">...</span></li>
+			{% endif %}
+			{% endfor %}
+			
+			{% if barang_list.has_next %}
+			<li class="page-item">
+				<a class="page-link" href="?page={{ barang_list.next_num }}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}{% if request.args.get('tipe_id') %}&tipe_id={{ request.args.get('tipe_id') }}{% endif %}">
+					Next &raquo;
+				</a>
+			</li>
+			{% endif %}
+		</ul>
+	</nav>	
+</main>
+<script>
+	document.getElementById("bulk-delete").addEventListener("click", () => {
+		const selectedIds = Array.from(
+			document.querySelectorAll(".select-item:checked")
+		).map((cb) => cb.value);
+
+		if (selectedIds.length > 0) {
+			if (
+				confirm(`Are you sure you want to delete ${selectedIds.length} items?`)
+			) {
+				fetch("/barang/bulk_delete", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ ids: selectedIds }),
+				})
+					.then((response) => response.json())
+					.then((data) => alert(data.message))
+					.catch((error) => {
+						console.error("Error:", error);
+						alert("An error occurred while processing your request.");
+					})
+					.finally(() => location.reload());
+			}
+		} else {
+			alert("Please select items to delete.");
+		}
+	});
+	document.getElementById("select-all").addEventListener("change", function () {
+		const checkboxes = document.querySelectorAll(".select-item");
+		checkboxes.forEach((checkbox) => (checkbox.checked = this.checked));
+	});
+
+	// Handle Search Bar input
+	document.getElementById("search-bar").addEventListener("input", (e) => {
+		const searchQuery = e.target.value.trim();
+		window.location.href = `/barang?search=${encodeURIComponent(searchQuery)}`;
+	});
+
+	// Handle Refresh Data button click
+	document.getElementById("refresh-data").addEventListener("click", () => {
+		location.reload();
+	});
+</script>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base/base.html" %} {% block content %}
+<h1>Detail Barang</h1>
+<p>ID Barang: {{ barang.id_barang }}</p>
+<p>Nama Barang: {{ barang.nama_barang }}</p>
+<p>Jumlah: {{ barang.jumlah }}</p>
+<p>Tipe: {{ barang.tipe.nama_tipe }}</p>
+{% endblock %}
