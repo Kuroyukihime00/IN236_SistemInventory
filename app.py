@@ -209,19 +209,44 @@ def export_barang():
     response.headers["Content-Type"] = "text/csv"
     return response
 
+@app.route('/barang/bulk_delete', methods=['POST'])
+def bulk_delete_barang():
+    try:
+        # Ambil ID yang dikirim dari frontend
+        data = request.get_json()
+        ids = data.get('ids', [])
+
+        if not ids:
+            return jsonify({'message': 'No items selected for deletion.'}), 400
+
+        # Hapus barang berdasarkan ID
+        Barang.query.filter(Barang.id.in_(ids)).delete(synchronize_session=False)
+        db.session.commit()
+
+        return jsonify({'message': f'Successfully deleted {len(ids)} items.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during bulk delete: {e}")
+        return jsonify({'message': 'An error occurred while processing your request.'}), 500
+
 # TipeBarang Routes
 @app.route('/tipebarang', methods=['GET'])
 def get_all_tipe():
+    search = request.args.get('search', '')
     page = request.args.get('page', 1, type=int)
     per_page = 10
-    tipe_list = TipeBarang.query.paginate(page=page, per_page=per_page, error_out=False)
-    
-    # Redirect ke halaman terakhir jika page melebihi batas
-    if page > tipe_list.pages and tipe_list.pages > 0:
-        return redirect(url_for('get_all_tipe', page=tipe_list.pages))
 
-    search = request.args.get('search', '')
-    return render_template('/tipebarang/index.html', tipe_list=tipe_list, search=search)
+    # Mulai query pada tabel TipeBarang
+    query = TipeBarang.query
+
+    # Filter berdasarkan nama tipe
+    if search:
+        query = query.filter(TipeBarang.nama_tipe.ilike(f'%{search}%'))
+
+    # Pagination
+    tipe_list = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('/tipebarang/index.html', tipe_list=tipe_list)
 
 @app.route('/tipebarang/create', methods=['GET', 'POST'])
 def add_tipebarang():
@@ -281,12 +306,23 @@ def export_tipebarang():
 
 @app.route('/tipebarang/bulk_delete', methods=['POST'])
 def bulk_delete_tipebarang():
-    ids = request.json.get('ids', [])
-    if ids:
+    try:
+        # Ambil ID yang dikirim dari frontend
+        data = request.get_json()
+        ids = data.get('ids', [])
+
+        if not ids:
+            return jsonify({'message': 'No items selected for deletion.'}), 400
+
+        # Hapus tipe barang berdasarkan ID
         TipeBarang.query.filter(TipeBarang.id.in_(ids)).delete(synchronize_session=False)
         db.session.commit()
-        return jsonify({'message': 'Selected items deleted successfully'}), 200
-    return jsonify({'message': 'No items selected'}), 400
+
+        return jsonify({'message': f'Successfully deleted {len(ids)} items.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during bulk delete: {e}")
+        return jsonify({'message': 'An error occurred while processing your request.'}), 500
 
 if __name__ == '__main__':
     with app.app_context():

@@ -17,7 +17,7 @@
 			type="text"
 			name="search"
 			value="{{ request.args.get('search', '') }}"
-			placeholder="Search by Name"
+			placeholder="Search by Tipe Name"
 			class="form-control mb-2"
 			style="max-width: 300px"
 		/>
@@ -33,7 +33,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{% if tipe_list %} {% for tipe in tipe_list %}
+			{% if tipe_list.items %} {% for tipe in tipe_list.items %}
 			<tr>
 				<td>
 					<input type="checkbox" class="select-item" value="{{ tipe.id }}" />
@@ -43,19 +43,21 @@
 				<td>
 					<a
 						href="{{ url_for('update_tipebarang', id=tipe.id) }}"
-						class="btn btn-warning me-1"
-						>Update</a
+						class="btn btn-warning"
 					>
+						Update
+					</a>
 					<a
 						href="{{ url_for('delete_tipebarang', id=tipe.id) }}"
 						class="btn btn-danger"
-						>Delete</a
 					>
+						Delete
+					</a>
 				</td>
 			</tr>
 			{% endfor %} {% else %}
 			<tr>
-				<td colspan="4">No data available</td>
+				<td colspan="4">No data found</td>
 			</tr>
 			{% endif %}
 		</tbody>
@@ -72,22 +74,18 @@
 					<span aria-hidden="true">&laquo;</span>
 				</a>
 			</li>
-			{% endif %} {% for page_num in tipe_list.iter_pages(left_edge=2,
-			right_edge=2, left_current=2, right_current=2) %} {% if page_num %}
+			{% endif %} {% for page_num in tipe_list.iter_pages() %}
 			<li
 				class="page-item {% if page_num == tipe_list.page %}active{% endif %}"
 			>
 				<a
 					class="page-link"
 					href="?page={{ page_num }}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}"
-					>{{ page_num }}</a
 				>
+					{{ page_num }}
+				</a>
 			</li>
-			{% else %}
-			<li class="page-item disabled">
-				<a class="page-link">...</a>
-			</li>
-			{% endif %} {% endfor %} {% if tipe_list.has_next %}
+			{% endfor %} {% if tipe_list.has_next %}
 			<li class="page-item">
 				<a
 					class="page-link"
@@ -112,11 +110,19 @@
 		return true;
 	}
 
-	// Handle Bulk Delete button click
+	// Handle Select All functionality
+	document.getElementById("select-all").addEventListener("change", function () {
+		const checkboxes = document.querySelectorAll(".select-item");
+		checkboxes.forEach((checkbox) => {
+			checkbox.checked = this.checked;
+		});
+	});
+
+	// Handle Bulk Delete functionality
 	document.getElementById("bulk-delete").addEventListener("click", () => {
 		const selectedIds = Array.from(
 			document.querySelectorAll(".select-item:checked")
-		).map((cb) => cb.value);
+		).map((checkbox) => checkbox.value);
 
 		if (selectedIds.length > 0) {
 			if (
@@ -124,19 +130,29 @@
 			) {
 				fetch("/tipebarang/bulk_delete", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+					},
 					body: JSON.stringify({ ids: selectedIds }),
 				})
-					.then((response) => response.json())
-					.then((data) => alert(data.message))
-					.catch((error) => {
-						console.error("Error:", error);
-						alert("An error occurred while processing your request.");
+					.then((response) => {
+						if (response.ok) {
+							return response.json();
+						} else {
+							throw new Error("Failed to delete items.");
+						}
 					})
-					.finally(() => location.reload());
+					.then((data) => {
+						alert(data.message);
+						location.reload();
+					})
+					.catch((error) => {
+						console.error(error);
+						alert("An error occurred while processing your request.");
+					});
 			}
 		} else {
-			alert("Please select items to delete.");
+			alert("Please select at least one item to delete.");
 		}
 	});
 

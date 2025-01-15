@@ -57,7 +57,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{% if barang_list %} {% for barang in barang_list %}
+			{% for barang in barang_list.items %}
 			<tr>
 				<td>
 					<input type="checkbox" class="select-item" value="{{ barang.id }}" />
@@ -67,29 +67,13 @@
 				<td>{{ barang.jumlah }}</td>
 				<td>{{ barang.tipe_id }}</td>
 				<td>
-					<a
-						href="{{ url_for('update_barang', id=barang.id) }}"
-						class="btn btn-warning me-1"
-						title="Edit this item"
-					>
-						<i class="fas fa-edit"></i> Update</a
-					>
-					<a
-						href="{{ url_for('delete_barang', id=barang.id) }}"
-						class="btn btn-danger"
-						title="Remove this item"
-					>
-						<i class="fas fa-trash"></i> Delete</a
-					>
+					<a href="{{ url_for('update_barang', id=barang.id) }}" class="btn btn-warning">Update</a>
+					<a href="{{ url_for('delete_barang', id=barang.id) }}" class="btn btn-danger">Delete</a>
 				</td>
 			</tr>
-			{% endfor %} {% else %}
-			<tr>
-				<td colspan="6">No data available</td>
-			</tr>
-			{% endif %}
+			{% endfor %}
 		</tbody>
-	</table>
+	</table>	
 	<nav aria-label="Page navigation">
 		<ul class="pagination justify-content-center">
 			{% if barang_list.has_prev %}
@@ -126,32 +110,43 @@
 	document.getElementById("bulk-delete").addEventListener("click", () => {
 		const selectedIds = Array.from(
 			document.querySelectorAll(".select-item:checked")
-		).map((cb) => cb.value);
+		).map((checkbox) => checkbox.value);
 
 		if (selectedIds.length > 0) {
-			if (
-				confirm(`Are you sure you want to delete ${selectedIds.length} items?`)
-			) {
+			if (confirm(`Are you sure you want to delete ${selectedIds.length} items?`)) {
 				fetch("/barang/bulk_delete", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+					},
 					body: JSON.stringify({ ids: selectedIds }),
 				})
-					.then((response) => response.json())
-					.then((data) => alert(data.message))
-					.catch((error) => {
-						console.error("Error:", error);
-						alert("An error occurred while processing your request.");
+					.then((response) => {
+						if (response.ok) {
+							return response.json();
+						} else {
+							throw new Error("Failed to delete items.");
+						}
 					})
-					.finally(() => location.reload());
+					.then((data) => {
+						alert(data.message);
+						location.reload();
+					})
+					.catch((error) => {
+						console.error(error);
+						alert("An error occurred while processing your request.");
+					});
 			}
 		} else {
-			alert("Please select items to delete.");
+			alert("Please select at least one item to delete.");
 		}
 	});
+
 	document.getElementById("select-all").addEventListener("change", function () {
 		const checkboxes = document.querySelectorAll(".select-item");
-		checkboxes.forEach((checkbox) => (checkbox.checked = this.checked));
+		checkboxes.forEach((checkbox) => {
+			checkbox.checked = this.checked;
+		});
 	});
 
 	// Handle Search Bar input
